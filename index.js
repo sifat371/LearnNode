@@ -1,7 +1,8 @@
 // dependencies
 const http = require("http");
 const {handleReqRes} = require('./Refactor/handleReqRes');
-const env = require('./Refactor/environment') 
+const env = require('./Refactor/environment');
+const data = require('./lib/data');
 
 // scafforlding
 const app = {};

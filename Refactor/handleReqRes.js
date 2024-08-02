@@ -5,7 +5,7 @@ const url = require("url");
 const { StringDecoder } = require("string_decoder");
 const routes = require("../routes");
 const { notFoundHander } = require("../handling/notFoundHandling");
-const environment = require("./environment");
+
 
 //scafoldings
 const handler = {};

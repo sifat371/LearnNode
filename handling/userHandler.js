@@ -70,7 +70,29 @@ handler._user.post = (requestProperties, callback) => {
 };
 
 handler._user.get = (requestProperties, callback) => {
-    callback(200);
+    const phone = typeof requestProperties.queryStringObject.phone === 'string' && requestProperties.queryStringObject.phone.trim().length === 11 ? requestProperties.queryStringObject.phone : false;
+
+    if(typeof phone === 'string' & phone.length === 11){
+        data.read('users', phone, (err, users) =>{
+            const user = { ...perseJSON(users)};
+            if (!err && user) {
+                delete user.password;
+                delete user.ToC;
+                callback(200, user);
+            }
+            else{
+                callback(404, {
+                    'error' : 'Request user not found!'
+                })
+            }
+        });
+    }
+    else{
+        callback(404,{
+            'error' : 'Request user not found!'
+        })
+    }
+    
 };
 
 handler._user.put = (requestProperties, callback) => {

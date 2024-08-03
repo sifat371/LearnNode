@@ -5,7 +5,7 @@ const handler = {};
 
 handler.sampleHandler = (requestProperties, callback) => {
     // console.log(requestProperties);
-    callback(300, {
+    callback(200, {
         message : 'This is sampleHandler'
     });
 };

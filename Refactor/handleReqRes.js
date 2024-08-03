@@ -5,6 +5,7 @@ const url = require("url");
 const { StringDecoder } = require("string_decoder");
 const routes = require("../routes");
 const { notFoundHander } = require("../handling/notFoundHandling");
+const {perseJSON} = require('./utilities')
 
 
 //scafoldings
@@ -43,19 +44,23 @@ handler.handleReqRes = (req, res) => {
 
   req.on("end", () => {
     realData += decoder.end();
-    console.log(realData);
+    // console.log(realData);
+
+    requestProperties.body = perseJSON(realData);
+
     chosenHandler(requestProperties, (statusCode, payload) => {
       statusCode = typeof statusCode === "number" ? statusCode : 500;
       payload = typeof payload === "object" ? payload : {};
 
       payloadString = JSON.stringify(payload);
 
+      res.setHeader('Content-Type', 'application/json');
       res.writeHead(statusCode);
       res.end(payloadString);
     });
 
     //response handle
-    res.end("Hello World 123");
+    // res.end("Hello World 123");
   });
 };
 

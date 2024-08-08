@@ -1,8 +1,7 @@
 // User handling 
 
 //Dependencies
-// const { error } = require('console');
-const { error } = require('console');
+
 const data = require('../lib/data');
 const {perseJSON} = require('../Refactor/utilities');
 const {hash} = require('../Refactor/utilities')
@@ -151,6 +150,35 @@ handler._user.put = (requestProperties, callback) => {
 };
 
 handler._user.delete = (requestProperties, callback) => {
+    const phone = typeof requestProperties.queryStringObject.phone === 'string' && requestProperties.queryStringObject.phone.trim().length === 11 ? requestProperties.queryStringObject.phone : false;
 
+    if(phone){
+        data.read('users', phone, (err, userData) => {
+            if(!err){
+                data.delete('users', phone, (err) => {
+                    if(!err){
+                        callback(200, {
+                            messege : "User deleted succesfully"
+                        })
+                    }
+                    else{
+                        callback(500, {
+                            error : "Error deleting the user!"
+                        })
+                    }
+                })
+            }
+            else{
+                callback(400, {
+                    Error : "User does not exist!"
+                })
+            }
+        })
+    }
+    else{
+        callback(400, {
+            "Error" : "There was an error in your request!"
+        })
+    }
 };
 module.exports = handler;

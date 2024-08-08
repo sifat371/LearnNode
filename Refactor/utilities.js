@@ -31,4 +31,9 @@ utilities.hash = (str) => {
     }
 };
 
+utilities.createTokenId = (strLength) => {
+    const tokenItems = '1234567890abcdefghijklmnopqrstuvwxyz';
+
+};
+
 module.exports = utilities;

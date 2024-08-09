@@ -33,7 +33,13 @@ utilities.hash = (str) => {
 
 utilities.createTokenId = (strLength) => {
     const tokenItems = '1234567890abcdefghijklmnopqrstuvwxyz';
+    let tokenID = '';
 
+    for (let i = 1; i <= strLength; i++) {
+        tokenID += tokenItems.charAt(Math.floor(Math.random() * tokenItems.length) );
+    }
+
+    return tokenID;
 };
 
 module.exports = utilities;

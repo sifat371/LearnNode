@@ -36,14 +36,23 @@ handler.token.post = (requestProperties, callback) => {
             let uPass = hash(password);
             if(uData.password === uPass){
                 const tokenId = createTokenId(20);
-                const expires = date.now() + 60 * 60 * 1000;
+                const expires = Date.now() + 60 * 60 * 1000;
                 const tokenObject = {
                     phone,
-                    tokenId,
+                    id : tokenId,
                     expires
                 }
                 data.create('tokens', tokenId, tokenObject, (err)=> {
-
+                    if(!err){
+                        callback(200, {
+                            messege : "Your temporary id is created succesfully"
+                        })
+                    }
+                    else{
+                        callback(500,{
+                            error : "There is a server side error!"
+                        })
+                    }
                 })
             }
             else{

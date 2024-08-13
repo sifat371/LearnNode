@@ -4,7 +4,8 @@
 
 const data = require('../lib/data');
 const {perseJSON} = require('../Refactor/utilities');
-const {hash} = require('../Refactor/utilities')
+const {hash} = require('../Refactor/utilities');
+const tokenHandler = require('./tokenHandler');
 
 //Module scafolding
 const handler = {};
@@ -70,22 +71,38 @@ handler._user.post = (requestProperties, callback) => {
 };
 
 handler._user.get = (requestProperties, callback) => {
-    const phone = typeof requestProperties.queryStringObject.phone === 'string' && requestProperties.queryStringObject.phone.trim().length === 11 ? requestProperties.queryStringObject.phone : false;
+    const phone = typeof requestProperties.queryStringObject.phone === 'string' 
+    && requestProperties.queryStringObject.phone.trim().length === 11 
+    ? requestProperties.queryStringObject.phone : false;
 
     if(phone){
-        data.read('users', phone, (err, users) =>{
-            const user = { ...perseJSON(users)};
-            if (!err && user) {
-                delete user.password;
-                delete user.ToC;
-                callback(200, user);
+        //verify user
+        const token = typeof requestProperties.headersObject.token === 'string'
+        && requestProperties.headersObject.token.trim().length === 20
+        ? requestProperties.headersObject.token : false;
+
+        tokenHandler.token.verify(token, phone, (tokenId) => {
+            if(tokenId){
+                data.read('users', phone, (err, users) =>{
+                    const user = { ...perseJSON(users)};
+                    if (!err && user) {
+                        delete user.password;
+                        delete user.ToC;
+                        callback(200, user);
+                    }
+                    else{
+                        callback(404, {
+                            'error' : 'Request user not found!'
+                        })
+                    }
+                });
             }
             else{
-                callback(404, {
-                    'error' : 'Request user not found!'
+                callback(403,{
+                    Messege : "Authentication failure!"
                 })
             }
-        });
+        })
     }
     else{
         callback(404,{
@@ -105,40 +122,54 @@ handler._user.put = (requestProperties, callback) => {
     const password = typeof requestProperties.body.password === 'string' && requestProperties.body.password.trim().length > 0 ? requestProperties.body.password : false;
 
     if(phone){
-        if(firstName || lastName || password){
+        //verify authentication
+        const token = typeof requestProperties.headersObject.token === 'string'
+        && requestProperties.headersObject.token.trim().length === 20
+        ? requestProperties.headersObject.token : false;
 
-            data.read('users', phone, (err, userData) =>{
-                const user = { ...perseJSON(userData)};
-                if (!err) {
-                    if(firstName) user.firstName = firstName;
-                    if(lastName )user.lastName = lastName;
-                    if(password) user.password = hash(password);
+        tokenHandler.token.verify(token, phone, (tokenId) => {
+            if(tokenId){
+                if(firstName || lastName || password){
 
-                    data.update('users', phone, user, (err) => {
+                    data.read('users', phone, (err, userData) =>{
+                        const user = { ...perseJSON(userData)};
                         if (!err) {
-                            callback(200,{
-                                'messege' : 'User data updated succesfully'
-                            })
+                            if(firstName) user.firstName = firstName;
+                            if(lastName )user.lastName = lastName;
+                            if(password) user.password = hash(password);
+        
+                            data.update('users', phone, user, (err) => {
+                                if (!err) {
+                                    callback(200,{
+                                        'messege' : 'User data updated succesfully'
+                                    });
+                                }
+                                else{
+                                    callback(500,{
+                                        'error' : 'Error updating the data!'
+                                    });
+                                }
+                            });
                         }
                         else{
-                            callback(500,{
-                                'error' : 'Error updating the data!'
-                            })
+                            callback(404, {
+                                'error' : 'Request user not found!'
+                            });
                         }
-                    })
-                }
-                else{
-                    callback(404, {
-                        'error' : 'Request user not found!'
                     });
                 }
-            });
-        }
-        else{
-            callback(400,{
-                'error' : 'You have error in your data entry, please try again!'
-            })
-        }
+                else{
+                    callback(400,{
+                        'error' : 'You have error in your data entry, please try again!'
+                    });
+                }
+            }
+            else{
+                callback(403,{
+                    Messege : "Authentication failure!"
+                });
+            }
+        });
     
     }
     else{
@@ -153,32 +184,49 @@ handler._user.delete = (requestProperties, callback) => {
     const phone = typeof requestProperties.queryStringObject.phone === 'string' && requestProperties.queryStringObject.phone.trim().length === 11 ? requestProperties.queryStringObject.phone : false;
 
     if(phone){
-        data.read('users', phone, (err, userData) => {
-            if(!err){
-                data.delete('users', phone, (err) => {
+        //verify authentication
+        const token = typeof requestProperties.headersObject.token === 'string'
+        && requestProperties.headersObject.token.trim().length === 20
+        ? requestProperties.headersObject.token : false;
+
+        tokenHandler.token.verify(token, phone, (tokenId) => {
+            if(tokenId){
+                
+                data.read('users', phone, (err, userData) => {
                     if(!err){
-                        callback(200, {
-                            messege : "User deleted succesfully"
-                        })
+                        data.delete('users', phone, (err) => {
+                            if(!err){
+                                callback(200, {
+                                    messege : "User deleted succesfully"
+                                });
+                            }
+                            else{
+                                callback(500, {
+                                    error : "Error deleting the user!"
+                                });
+                            }
+                        });
                     }
                     else{
-                        callback(500, {
-                            error : "Error deleting the user!"
+                        callback(400, {
+                            Error : "User does not exist!"
                         })
                     }
-                })
+                });
             }
             else{
-                callback(400, {
-                    Error : "User does not exist!"
-                })
+                callback(403,{
+                    Messege : "Authentication failure!"
+                });
             }
-        })
+        });
+
+        
     }
     else{
         callback(400, {
             "Error" : "There was an error in your request!"
-        })
+        });
     }
 };
 module.exports = handler;

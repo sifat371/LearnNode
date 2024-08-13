@@ -26,9 +26,13 @@ handler.token = {};
 
 handler.token.post = (requestProperties, callback) => {
 
-    const phone = typeof requestProperties.body.phone === 'string' && requestProperties.body.phone.trim().length === 11 ? requestProperties.body.phone : false;
+    const phone = typeof requestProperties.body.phone === 'string' 
+    && requestProperties.body.phone.trim().length === 11 
+    ? requestProperties.body.phone : false;
     
-    const password = typeof requestProperties.body.password === 'string' && requestProperties.body.password.trim().length > 0 ? requestProperties.body.password : false;
+    const password = typeof requestProperties.body.password === 'string' 
+    && requestProperties.body.password.trim().length > 0 
+    ? requestProperties.body.password : false;
 
     if (phone && password) {
         data.read('users', phone, (err, userData) => {
@@ -84,8 +88,8 @@ handler.token.get = (requestProperties, callback) => {
     ? requestProperties.queryStringObject.id : false;
 
     if(id){
-        data.read('tokens', id, (err, data) =>{
-            const tokenData = { ...perseJSON(data)};
+        data.read('tokens', id, (err, tdata) =>{
+            const tokenData = { ...perseJSON(tdata)};
             if (!err && tokenData) {
                 callback(200, { 
                     tokenData
@@ -106,7 +110,45 @@ handler.token.get = (requestProperties, callback) => {
 };
 // Put --> Update the user data 
 handler.token.put = (requestProperties, callback) => {
+    const id = typeof requestProperties.body.id === 'string' 
+    && requestProperties.body.id.trim().length === 20
+    ? requestProperties.body.id : false;
 
+    const extend = typeof requestProperties.body.extend === 'boolean' 
+    && requestProperties.body.extend === true
+    ? true : false;
+
+
+    if (id && extend) {
+        data.read('tokens', id, (err, tdata)=>{
+            const tokenData = { ...perseJSON(tdata)};
+            if(!err && tokenData.expires > Date.now()){
+            tokenData.expires = Date.now() + 60 * 60 * 1000;
+                data.update('tokens', id, tokenData, (err) => {
+                    if(!err){
+                        callback(200, {
+                            messege : "Token id extends anothor one hour"
+                        })
+                    }
+                    else{
+                        callback(500, {
+                            Error : "There is a server side error!"
+                        })
+                    }
+                });
+            }
+            else{
+                callback(400,{
+                    Error : " was an error in your request!"
+                });
+            }
+        })
+    }
+    else{
+        callback(400,{
+            Error : "There was an error in your request!"
+        });
+    }
 };
 
 handler.token.delete = (requestProperties, callback) => {

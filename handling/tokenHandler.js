@@ -152,6 +152,36 @@ handler.token.put = (requestProperties, callback) => {
 };
 
 handler.token.delete = (requestProperties, callback) => {
-    
+    const id = typeof requestProperties.queryStringObject.id === 'string' && requestProperties.queryStringObject.id.trim().length === 20 ? requestProperties.queryStringObject.id : false;
+
+    if(id){
+        data.read('tokens', id, (err, userData) => {
+            if(!err){
+                data.delete('tokens', id, (err) => {
+                    if(!err){
+                        callback(200, {
+                            messege : "token deleted succesfully"
+                        })
+                    }
+                    else{
+                        callback(500, {
+                            error : "Error deleting the token!"
+                        })
+                    }
+                })
+            }
+            else{
+                callback(400, {
+                    Error : "tpken does not exist!"
+                })
+            }
+        })
+    }
+    else{
+        callback(400, {
+            "Error" : "There was an error in your request!"
+        })
+    }
 };
+
 module.exports = handler;

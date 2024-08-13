@@ -79,7 +79,30 @@ handler.token.post = (requestProperties, callback) => {
 };
 
 handler.token.get = (requestProperties, callback) => {
-    
+    const id = typeof requestProperties.queryStringObject.id === 'string' 
+    && requestProperties.queryStringObject.id.trim().length === 20
+    ? requestProperties.queryStringObject.id : false;
+
+    if(id){
+        data.read('tokens', id, (err, data) =>{
+            const tokenData = { ...perseJSON(data)};
+            if (!err && tokenData) {
+                callback(200, { 
+                    tokenData
+                });
+            }
+            else{
+                callback(500, {
+                    Error : 'Request ID not found!'
+                })
+            }
+        });
+    }
+    else{
+        callback(404,{
+            Error : 'Request ID not found!'
+        })
+    }
 };
 // Put --> Update the user data 
 handler.token.put = (requestProperties, callback) => {

@@ -32,32 +32,40 @@ handler.token.post = (requestProperties, callback) => {
 
     if (phone && password) {
         data.read('users', phone, (err, userData) => {
-            let uData = { ...perseJSON(userData) };
-            let uPass = hash(password);
-            if(uData.password === uPass){
-                const tokenId = createTokenId(20);
-                const expires = Date.now() + 60 * 60 * 1000;
-                const tokenObject = {
-                    phone,
-                    id : tokenId,
-                    expires
+            if(!err){
+                let uData = { ...perseJSON(userData) };
+                let uPass = hash(password);
+                if(uData.password === uPass){
+                    const tokenId = createTokenId(20);
+                    const expires = Date.now() + 60 * 60 * 1000;
+                    const tokenObject = {
+                        phone,
+                        id : tokenId,
+                        expires
+                    }
+                    data.create('tokens', tokenId, tokenObject, (err)=> {
+                        if(!err){
+                            callback(200, {
+                                messege : "Your temporary id is created succesfully",
+                                tokenObject
+                            })
+                        }
+                        else{
+                            callback(500,{
+                                error : "There is a server side error!"
+                            })
+                        }
+                    });
                 }
-                data.create('tokens', tokenId, tokenObject, (err)=> {
-                    if(!err){
-                        callback(200, {
-                            messege : "Your temporary id is created succesfully"
-                        })
-                    }
-                    else{
-                        callback(500,{
-                            error : "There is a server side error!"
-                        })
-                    }
-                })
+                else{
+                    callback(400,{
+                        error : "Password is not correct!"
+                    })
+                }
             }
             else{
-                callback(400,{
-                    error : "Password is not correct!"
+                callback(404,{
+                    Error : "User not found!"
                 })
             }
         })
